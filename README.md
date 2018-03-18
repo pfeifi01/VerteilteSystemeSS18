@@ -1,6 +1,6 @@
 # Verteilte Systeme PS SS2018
 
-##Collecting Points:
+## Collecting Points:
 
 **PS Exam (Pass/Fail)**
 
