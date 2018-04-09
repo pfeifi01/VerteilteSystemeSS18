@@ -22,7 +22,7 @@ public class Protocol {
             try {
                 client = server.accept();
             } catch(SocketException ex) {
-                System.err.println("**Server Shutdown**");
+                System.out.println("**Server Shutdown**");
             } catch (IOException e) {
                 System.err.println("An error occurred while connecting to the client");
                 e.printStackTrace();
