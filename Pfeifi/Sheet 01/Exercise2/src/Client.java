@@ -7,12 +7,12 @@ public class Client {
 
     public static void main(String args[]) {
 
-        Socket server = null;
+        Socket server = null; // This is actually the proxy, but the client doesn't know
 
         try {
             server = new Socket("localhost", Protocol.FIXED_PORT);
         } catch (IOException ex) {
-            System.err.println("An error occurred while connecting to the server");
+            System.err.println("An error occurred while connecting from client to the server");
         }
 
         // Read message from user input
@@ -34,7 +34,5 @@ public class Client {
         } catch (IOException e) {
             System.err.println("Error: Server can't be closed");
         }
-
     }
-
 }
