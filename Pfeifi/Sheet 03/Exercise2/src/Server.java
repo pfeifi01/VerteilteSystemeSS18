@@ -6,28 +6,39 @@ import java.util.Arrays;
 
 public class Server implements Services {
 
-    public final int serverPort = 9000;
+    public int serverPort;
+    public  AccessRights right;
+    Services stub = null;
 
-    public static void main(String[] args) {
+    public Server(int port, AccessRights right){
+        this.serverPort = port;
+        this.right = right;
+    }
 
-        // Create a new instance of the server
-        Server server = new Server();
-
+    private void initializeServer(){
         try {
-            Services stub = (Services) UnicastRemoteObject.exportObject(server, Registry.REGISTRY_PORT);
-            // Create + locate the registry and bind the remote object's stub in the registry
+            stub = (Services) UnicastRemoteObject.exportObject(this, 0);
             Registry registry;
-            LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
-            registry = LocateRegistry.getRegistry();
+            LocateRegistry.createRegistry(this.serverPort);
+            registry = LocateRegistry.getRegistry(serverPort);
             registry.bind("Services", stub);
-            System.out.println("**Server is ready for Clients**");
+            System.out.println("**" + this.right + "-Server is Ready**");
         } catch (Exception e) {
-            System.err.println("An error occurred while starting the registry or the server: " + e.toString());
+            System.err.println("An error occurred while starting the "+ this.right +"-Server: " + e.toString());
             e.printStackTrace();
         }
     }
 
-    // Expand by starting a new Thread for every request
+    public static void main(String[] args) {
+
+        // Create two new instances of endpoint-servers, on for each function of the services
+        Server sortServer = new Server(9000,AccessRights.SORT);
+        Server computeServer = new Server(9100, AccessRights.COMPUTE);
+        sortServer.initializeServer();
+        computeServer.initializeServer();
+
+    }
+
     @Override
     public String compute(int time) throws RemoteException {
         try {
@@ -35,10 +46,9 @@ public class Server implements Services {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return "**Server computed for " + time + " seconds**";
+        return "Server computed for " + time + " seconds<";
     }
 
-    // Expand by starting a new Thread for every request
     @Override
     public String sort(String input) throws RemoteException {
         char[] chars = input.toCharArray();

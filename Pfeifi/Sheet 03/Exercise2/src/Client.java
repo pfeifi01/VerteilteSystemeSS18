@@ -37,10 +37,10 @@ public class Client {
                         String unsortedString = unsortedStrings[timeToCompute];
 
                         // Make request to the server
-                        System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right["+right+"] sends unsorted String [" + unsortedString +"] to Server**");
+                        System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] sends unsorted String [" + unsortedString +"] to Server**");
                         try {
-                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right["+right+"] got Server Response: " + stub.compute(timeToCompute));
-                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right["+right+"] got Server Response: " + stub.sort(unsortedString));
+                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] got Server Response: " + stub.compute(timeToCompute));
+                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] got Server Response: " + stub.sort(unsortedString));
                         } catch (RemoteException e) {
                             System.err.println("An error occurred while connecting to the server: " + e.toString());
                         }
