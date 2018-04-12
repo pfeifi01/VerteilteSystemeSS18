@@ -34,7 +34,7 @@ public class Client {
                         }
                     }
                 });
-            }
+            } executor.shutdown();
         } catch (Exception e) {
             System.err.println("An error occurred while starting the registry or connecting to the server: " + e.toString());
             e.printStackTrace();

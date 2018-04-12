@@ -12,15 +12,12 @@ public class Server implements Services{
         Server server = new Server();
 
         try {
-
             Services stub = (Services) UnicastRemoteObject.exportObject(server, Registry.REGISTRY_PORT);
-
             // Create + locate the registry and bind the remote object's stub in the registry
             Registry registry;
             LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
             registry = LocateRegistry.getRegistry();
             registry.bind("Services", stub);
-
             System.out.println("**Server is ready for Clients**");
         } catch (Exception e) {
             System.err.println("An error occurred while starting the registry or the server: " + e.toString());

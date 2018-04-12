@@ -7,11 +7,23 @@ import java.util.concurrent.Executors;
 
 public class Client {
 
+    private int numberOfThreads = 2;
+    private String unsortedStrings[] = {"test","hello","world","glass","dog","phone","bird","mouse","key","check"};
+    private AccessRights right = null; // TODO: Refactor into array
+
+    public Client (AccessRights right){
+        this.right = right;
+    }
+
     public static void main(String args[]) {
 
-        int numberOfThreads = 10;
-        String unsortedStrings[] = {"test","hello","world","glass","dog","phone","bird","mouse","key","check"};
+        Client sortClient = new Client(AccessRights.SORT);
+        Client computeClient = new Client(AccessRights.COMPUTE);
+        sortClient.initializeClient();
+        computeClient.initializeClient();
+    }
 
+    public void initializeClient(){
         try {
             Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
             Services stub = (Services) registry.lookup("Services");
@@ -25,16 +37,16 @@ public class Client {
                         String unsortedString = unsortedStrings[timeToCompute];
 
                         // Make request to the server
-                        System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") sends unsorted String [" + unsortedString +"] to Server**");
+                        System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right["+right+"] sends unsorted String [" + unsortedString +"] to Server**");
                         try {
-                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") got Server Response: " + stub.compute(timeToCompute));
-                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") got Server Response: " + stub.sort(unsortedString));
+                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right["+right+"] got Server Response: " + stub.compute(timeToCompute));
+                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right["+right+"] got Server Response: " + stub.sort(unsortedString));
                         } catch (RemoteException e) {
                             System.err.println("An error occurred while connecting to the server: " + e.toString());
                         }
                     }
                 });
-            }
+            } executor.shutdown();
         } catch (Exception e) {
             System.err.println("An error occurred while starting the registry or connecting to the server: " + e.toString());
             e.printStackTrace();
