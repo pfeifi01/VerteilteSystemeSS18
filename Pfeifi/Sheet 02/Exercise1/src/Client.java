@@ -34,7 +34,5 @@ public class Client {
         } catch (IOException e) {
             System.err.println("Error: Server can't be closed");
         }
-
     }
-
 }
