@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 public class Proxy implements Services {
 
+    private Services proxyServerStub = null;
     private Services sortServerStub = null;
     private Services computeServerStub = null;
 
@@ -25,8 +26,8 @@ public class Proxy implements Services {
             Registry registryForClient;
             LocateRegistry.createRegistry(Registry.REGISTRY_PORT); //RMI-Port 1099
             registryForClient = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
-            Services proxyStub = (Services) UnicastRemoteObject.exportObject(this, Registry.REGISTRY_PORT);
-            registryForClient.bind("Services", proxyStub);
+            proxyServerStub = (Services) UnicastRemoteObject.exportObject(this, Registry.REGISTRY_PORT);
+            registryForClient.bind("Services", proxyServerStub);
             System.out.println("**Proxy-Server is ready for Clients**\n");
         } catch (Exception e) {
             System.err.println("An error occurred while connecting to the Endpoint-Servers or creating the Proxy-Server: " + e.toString());
@@ -41,25 +42,25 @@ public class Proxy implements Services {
 
     @Override
     // Forwards function to Server, if client has the access right "SORT"
-    public String sort(String inputString) throws RemoteException {
-        if(true) { // TODO: Check Access Rights & forward to SortServer [If Client.AccesRights == Server.Accesrights]
-            System.out.println("**Function 'sort' called by Client Thread (" + Thread.currentThread().getId() + ") was forwarded by the ProxyServer to Server**");
-            return sortServerStub.sort(inputString);
+    public String sort(String inputString, AccessRight right) throws RemoteException {
+        if(right.equals(AccessRight.SORT)) {
+            System.out.println("**Function [SORT] called by a Client Thread was forwarded by the ProxyServer to Server**");
+            return sortServerStub.sort(inputString, right);
         } else {
-            System.out.println("**Function 'sort' called by Client Thread (" + Thread.currentThread().getId() + ") was denied by the ProxyServer**");
-            return "Access Denied";
+            System.out.println("**Function [SORT] called by a Client Thread was denied by the ProxyServer**");
+            return "ACCESS DENIED: No rights for [SORT]";
         }
     }
 
     @Override
     // Forwards function to Server, if client has the access right "COMPUTE"
-    public String compute(int time) throws RemoteException {
-        if(true){ // TODO: Check Access Rights & forward to ComputeServer [If Client.AccesRights == Server.Accesrights]
-            System.out.println("**Function 'compute' called by Client Thread (" + Thread.currentThread().getId() + ") was forwarded by the ProxyServer to Server**");
-            return computeServerStub.compute(time);
+    public String compute(int time,AccessRight right) throws RemoteException {
+        if(right.equals(AccessRight.COMPUTE)){
+            System.out.println("**Function [COMPUTE] called by a Client Thread was forwarded by the ProxyServer to Server**");
+            return computeServerStub.compute(time, right);
         } else {
-            System.out.println("**Function 'compute' called by Client Thread (" + Thread.currentThread().getId() + ") was denied by the ProxyServer**");
-            return "Access Denied";
+            System.out.println("**Function [COMPUTE] called by a Client Thread was denied by the ProxyServer**");
+            return "ACCESS DENIED: No rights for [COMPUTE]";
         }
     }
 }

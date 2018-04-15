@@ -9,16 +9,16 @@ public class Client {
 
     private int numberOfThreads = 2;
     private String unsortedStrings[] = {"test","hello","world","glass","dog","phone","bird","mouse","key","check"};
-    private AccessRights right = null; // TODO: Refactor into array
+    private AccessRight right;
 
-    public Client (AccessRights right){
+    public Client (AccessRight right){
         this.right = right;
     }
 
     public static void main(String args[]) {
 
-        Client sortClient = new Client(AccessRights.SORT);
-        Client computeClient = new Client(AccessRights.COMPUTE);
+        Client sortClient = new Client(AccessRight.SORT);
+        Client computeClient = new Client(AccessRight.COMPUTE);
         sortClient.initializeClient();
         computeClient.initializeClient();
     }
@@ -37,10 +37,11 @@ public class Client {
                         String unsortedString = unsortedStrings[timeToCompute];
 
                         // Make request to the server
-                        System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] sends unsorted String [" + unsortedString +"] to Server**");
+                        System.out.println("** Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] calls the [SORT] function with the string [" + unsortedString +"] as parameter **");
+                        System.out.println("** Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] calls the [COMPUTE] function with [" + timeToCompute+ " seconds] as parameter **");
                         try {
-                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] got Server Response: " + stub.compute(timeToCompute));
-                            System.out.println("**Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] got Server Response: " + stub.sort(unsortedString));
+                            System.out.println("** Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] got Server Response: " + stub.compute(timeToCompute,right) + " **");
+                            System.out.println("** Client Thread (" + Thread.currentThread().getId() + ") with Access Right ["+right+"] got Server Response: " + stub.sort(unsortedString,right) + " **");
                         } catch (RemoteException e) {
                             System.err.println("An error occurred while connecting to the server: " + e.toString());
                         }
