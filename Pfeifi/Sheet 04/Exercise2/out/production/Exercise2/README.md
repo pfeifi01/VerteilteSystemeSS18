@@ -7,7 +7,3 @@
 
 ### Work with Nodes
 * Nodes will automatically send requests every 3 seconds
-
-# Answer to Aggregation
-
-* 
