@@ -9,8 +9,12 @@ import java.util.Set;
 public class Node{
 
     // Table of Nodes [Name,IP,Port] with max of 3 Nodes
-    public ArrayList<NodeEntry> knownNodes = new ArrayList<>(3);
+    public ArrayList<String> knownNodes = new ArrayList<>(3);
     //TODO: Create second table with deleted nodes for the case we can't connect anymore to anything in our table
+
+    public final String networkHandlerIp = "localhost";
+    public final int networkHandlerPort = 8000;
+    Socket networkHandler;
 
     public String name;
     public String ip;
@@ -27,22 +31,31 @@ public class Node{
 
         try {
             server = new ServerSocket(port);
+            networkHandler = new Socket(networkHandlerIp,networkHandlerPort);
+            ObjectOutputStream outToNetworkHandler =  new ObjectOutputStream(networkHandler.getOutputStream());
+            outToNetworkHandler.writeObject(new NodeEntry(ip,port,name));
+            ObjectInputStream inFromNetworkHandler = null;
+            inFromNetworkHandler = new ObjectInputStream(networkHandler.getInputStream());
+            System.out.println("** Node registered itself at the Network Handler **");
+            outToNetworkHandler.close();
+            inFromNetworkHandler.close();
+            networkHandler.close();
         } catch (IOException e) {
-            System.err.println("An error occurred while registering the ServerSocket of Node " + name + ".");
+            System.err.println("An error occurred while registering the ServerSocket of Node " + name + ", or while connecting to Network Handler.");
             e.printStackTrace();
         }
     }
 
-    public void initializeNode(String ipOfOtherNode, int portOfOtherNode, String nameOfOtherNode){
-        knownNodes.add(new NodeEntry(ipOfOtherNode,portOfOtherNode,nameOfOtherNode));
-        System.out.println("** Added Node N[" + portOfOtherNode + "] to the Table of Node " + name + " **\n");
+    public void initializeNode(String nameOfOtherNode){
+        knownNodes.add(nameOfOtherNode);
+        System.out.println("** Added Node [" + nameOfOtherNode + "] to the Table of Node " + name + " **\n");
     }
 
     // Format Table to Pretty Printing
-    public String formatTable(ArrayList<NodeEntry> nodeTable){
+    public String formatTable(ArrayList<String> nodeTable){
         String formattedTable = "";
         for(int i = 0; i < nodeTable.size(); i++){
-            formattedTable += "{" + nodeTable.get(i).ip + "|" + nodeTable.get(i).port + "|" + nodeTable.get(i).name + "} ";
+            formattedTable += "{" + nodeTable.get(i)+ "} ";
         }
         return formattedTable;
     }
@@ -53,6 +66,8 @@ public class Node{
 
 //        System.out.println("Enter the IP for the Node: ");
         String ip = "localhost";
+        int port = 8080;
+        String name ="";
 //        try {
 //            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 //            ip = reader.readLine();
@@ -61,7 +76,6 @@ public class Node{
 //        }
 
         System.out.println("Enter the Port for the Node: ");
-        int port = 8080;
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
            port = Integer.parseInt(reader.readLine());
@@ -69,7 +83,15 @@ public class Node{
             e.printStackTrace();
         }
 
-        Node node = new Node(ip,port,"N "+ port);
+        System.out.println("Enter the Name for the Node: ");
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            name = reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Node node = new Node(ip,port,name);
         System.out.println("** Initialized Node N[" + node.port + "] with IP [" + node.ip + "] , Port [" + node.port + "] and Name " + node.name + " **\n");
 
         // Read message from user input
@@ -82,20 +104,21 @@ public class Node{
 //            e.printStackTrace();
 //        }
 
-        if(!ipOfOtherNode.equals("")){
 
-            System.out.println("Enter the Port of another Node: ");
-            int portOfOtherNode = 8080;
+
+            System.out.println("Enter the Name of another Node: ");
+            String nameOfOtherNode = "";
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                portOfOtherNode = Integer.parseInt(reader.readLine());
+                nameOfOtherNode = reader.readLine();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            node.initializeNode(ipOfOtherNode,portOfOtherNode,"N "+portOfOtherNode+"");
+        if(!nameOfOtherNode.equals("")){
+            node.initializeNode(nameOfOtherNode);
         } else {
-            System.out.println("** No Node was added to the table of Node N " + port + " **");
+            System.out.println("** No Node was added to the table of Node  " + name + " **");
         }
 
         System.out.println("Press any Key to activate this Node");
@@ -107,7 +130,7 @@ public class Node{
             e.printStackTrace();
         }
 
-        System.out.println("Node is now active");
+        System.out.println("** Node is now active**\n");
 
         // Wait for other nodes that want to establish a connection
             Thread receiveTableThread = new Thread(new Runnable() {
@@ -137,18 +160,35 @@ public class Node{
         requestTableThread.start();
     }
 
+
     public void connectToRandomNode(){
         Random rnd = new Random();
         if(knownNodes.size() < 1)
             return;
         int randomNodeRequestIndex = rnd.nextInt(knownNodes.size());
         try {
-            randomNodeRequest = new Socket(knownNodes.get(randomNodeRequestIndex).ip,knownNodes.get(randomNodeRequestIndex).port);
+            System.out.println("** ReceiveTableThread [" + Thread.currentThread().getId() + "] requested Table of Node [" + knownNodes.get(randomNodeRequestIndex) + "] from Network Handler **");
+            networkHandler = new Socket(networkHandlerIp,networkHandlerPort);
+            ObjectOutputStream outToNetworkHandler =  new ObjectOutputStream(networkHandler.getOutputStream());
+            outToNetworkHandler.writeObject(new NodeEntry(null,0,knownNodes.get(randomNodeRequestIndex)));
+            ObjectInputStream inFromNetworkHandler = null;
+            inFromNetworkHandler = new ObjectInputStream(networkHandler.getInputStream());
+            NodeEntry randomNode = (NodeEntry) inFromNetworkHandler.readObject();
+            outToNetworkHandler.flush();
+            outToNetworkHandler.close();
+            inFromNetworkHandler.close();
+            networkHandler.close();
+            System.out.println("** ReceiveTableThread [" + Thread.currentThread().getId() + "] received IP [" + randomNode.ip +"] and Port[" + randomNode.port + "] of Node [" + randomNode.name + "] from Network Handler **");
+            randomNodeRequest = new Socket(randomNode.ip,randomNode.port);
             updateNodeTable();
         } catch (IOException e) {
-            System.err.println("An error occurred while connecting to the randomly chosen Node [" + knownNodes.get(randomNodeRequestIndex).port +"]. Thus this node wil be removed from the table.");
+            System.err.println("An error occurred while connecting to the randomly chosen Node . Thus this node wil be removed from the table.");
             // e.printStackTrace();
             removeNode(randomNodeRequestIndex);
+        }
+        catch (ClassNotFoundException e ) {
+        System.err.println("Error: Problem occurred while casting NodeTable from Object");
+        e.printStackTrace();
         }
     }
 
@@ -161,7 +201,7 @@ public class Node{
         try {
             ObjectOutputStream outToServer =  new ObjectOutputStream(randomNodeReceive.getOutputStream());
             outToServer.writeObject(knownNodes);
-            System.out.println("** ReceiveTableThread [" + Thread.currentThread().getId() + "] sent Table " + formatTable(knownNodes) + "to Node ["+ randomNodeReceive.getLocalPort() +"] **");
+            System.out.println("** ReceiveTableThread [" + Thread.currentThread().getId() + "] sent Table " + formatTable(knownNodes) + "to Node with Port ["+ randomNodeReceive.getLocalPort() +"] **");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -170,12 +210,12 @@ public class Node{
     public void updateNodeTable(){
 
         ObjectInputStream inFromRandomNode = null;
-        ArrayList<NodeEntry> tableOfRandomNode = new ArrayList<>();
+        ArrayList<String> tableOfRandomNode = new ArrayList<>();
         try {
             inFromRandomNode = new ObjectInputStream(randomNodeRequest.getInputStream());
             // TODO: FixAnnotation for unchecked typecast
             // @SuppressWarnings('unchecked')
-            tableOfRandomNode = (ArrayList<NodeEntry>) inFromRandomNode.readObject();
+            tableOfRandomNode = (ArrayList<String>) inFromRandomNode.readObject();
             randomNodeRequest.close();
         } catch (IOException  e ) {
             System.err.println("Error: Connection to the randomly selected node can't be closed.");
@@ -189,31 +229,28 @@ public class Node{
     }
 
     public void removeNode(int index){
-        System.out.println("**Removed Node [" + knownNodes.get(index).port + "] from the table **");
+        System.out.println("**Removed Node [" + knownNodes.get(index) + "] from the table **");
         knownNodes.remove(index);
     }
-    //TODO: make table clear threadsafe
 
-    public void addNode(ArrayList<NodeEntry> tableOfRandomNode){
+    public void addNode(ArrayList<String> tableOfRandomNode){
 
         System.out.println("** RequestTableThread [" + Thread.currentThread().getId() + "] is merging its own Table " + formatTable(knownNodes) +"with the received Table " + formatTable(tableOfRandomNode) + "from randomly chosen Node **");
 
-
         knownNodes.addAll(tableOfRandomNode);
         // Remove myself from the table
-        NodeEntry selfNode = new NodeEntry(ip,port,"N " + name + "");
+        String selfNode = name;
         for (int i= 0; i < knownNodes.size();i++){
             if(knownNodes.get(i).equals(selfNode)){
                 knownNodes.remove(i);
             }
         }
 
-        // TODO: Remove Duplicates manually
-        Set<NodeEntry> mergedTable = new LinkedHashSet<>(knownNodes);
+        Set<String> mergedTable = new LinkedHashSet<>(knownNodes);
         knownNodes.clear();
         knownNodes.addAll(mergedTable);
         for(int i = 0; i < knownNodes.size();i++){
-            NodeEntry temp = knownNodes.get(i); {
+            String temp = knownNodes.get(i); {
                 for (int j = i+1; j < knownNodes.size();j++){
                     if(temp.equals(knownNodes.get(j)))
                         knownNodes.remove(j);

@@ -82,6 +82,8 @@ public class NetworkHandler {
                 System.out.println("** NetworkTable: " + formatTable() + "**");
             }
             outToNode.flush();
+            outToNode.close();
+            inFromNode.close();
             node.close();
 
         } catch (IOException e) {

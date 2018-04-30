@@ -12,6 +12,13 @@ public class NodeEntry implements Serializable {
         this.port = port;
     }
 
+    public NodeEntry (String message){
+        String[] messageSplit = message.split(" ");
+        this.port =  Integer.parseInt(messageSplit[0]);
+        this.name =  messageSplit[2];
+        this.ip =  messageSplit[1];
+    }
+
     public String getName() {
         return name;
     }
@@ -34,6 +41,11 @@ public class NodeEntry implements Serializable {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    @Override
+    public String toString() {
+        return (port + " " + ip + " " + name);
     }
 
     public boolean equals(NodeEntry entry) {

@@ -7,7 +7,8 @@ public class Node{
 
     // Table of Nodes [Name,IP,Port] with max of 3 Nodes
     public ArrayList<NodeEntry> knownNodes = new ArrayList<>(3);
-    //TODO: Create second table with deleted nodes for the case we can't connect anymore to anything in our table
+    // Save all nodes that were ever in our Node Table to prevent a possible segregation of the network
+    public ArrayList<NodeEntry> allEverKnownNodes = new ArrayList<>();
 
     public String name;
     public String ip;
@@ -32,6 +33,7 @@ public class Node{
 
     public void initializeNode(String ipOfOtherNode, int portOfOtherNode, String nameOfOtherNode){
         knownNodes.add(new NodeEntry(ipOfOtherNode,portOfOtherNode,nameOfOtherNode));
+        allEverKnownNodes.add(new NodeEntry(ipOfOtherNode,portOfOtherNode,nameOfOtherNode));
         System.out.println("** Added Node N[" + portOfOtherNode + "] to the Table of Node " + name + " **\n");
     }
 
@@ -136,16 +138,30 @@ public class Node{
 
     public void connectToRandomNode(){
         Random rnd = new Random();
-        if(knownNodes.size() < 1)
-            return;
-        int randomNodeRequestIndex = rnd.nextInt(knownNodes.size());
+        boolean useBackupTable = false;
+        int randomNodeRequestIndex = -1;
         try {
-            randomNodeRequest = new Socket(knownNodes.get(randomNodeRequestIndex).ip,knownNodes.get(randomNodeRequestIndex).port);
+            if(knownNodes.size() < 1 || false) { // If Node Table is empty, use Backup Table TODO: Replace false with a variable that checks if there was never a table update after connecting always to the same nodes..
+                if (allEverKnownNodes.size() < 1)
+                    return;
+                else {
+                    useBackupTable = true;
+                    randomNodeRequestIndex = rnd.nextInt(allEverKnownNodes.size());
+                    randomNodeRequest = new Socket(allEverKnownNodes.get(randomNodeRequestIndex).ip,allEverKnownNodes.get(randomNodeRequestIndex).port);
+                }
+            } else {
+                randomNodeRequestIndex = rnd.nextInt(knownNodes.size());
+                randomNodeRequest = new Socket(knownNodes.get(randomNodeRequestIndex).ip,knownNodes.get(randomNodeRequestIndex).port);
+            }
             updateNodeTable();
         } catch (IOException e) {
-            System.err.println("An error occurred while connecting to the randomly chosen Node [" + knownNodes.get(randomNodeRequestIndex).port +"]. Thus this node wil be removed from the table.");
             // e.printStackTrace();
-            removeNode(randomNodeRequestIndex);
+            if(!useBackupTable) {
+                System.err.println("An error occurred while connecting to the randomly chosen Node . Thus this node wil be removed from the table.");
+                removeNode(randomNodeRequestIndex);
+            } else {
+                System.err.println("An error occurred while connecting to the randomly chosen Node from Backup Table");
+            }
         }
     }
 
@@ -186,26 +202,24 @@ public class Node{
     }
 
     public void removeNode(int index){
+        allEverKnownNodes.add(knownNodes.get(index));
         System.out.println("**Removed Node [" + knownNodes.get(index).port + "] from the table **");
         knownNodes.remove(index);
     }
-    //TODO: make table clear threadsafe
 
     public void addNode(ArrayList<NodeEntry> tableOfRandomNode){
 
         System.out.println("** RequestTableThread [" + Thread.currentThread().getId() + "] is merging its own Table " + formatTable(knownNodes) +"with the received Table " + formatTable(tableOfRandomNode) + "from randomly chosen Node **");
 
-
         knownNodes.addAll(tableOfRandomNode);
         // Remove myself from the table
         NodeEntry selfNode = new NodeEntry(ip,port,"N " + name + "");
-        for (int i= 0; i < knownNodes.size();i++){
-            if(knownNodes.get(i).equals(selfNode)){
+        for (int i= 0; i < knownNodes.size();i++) {
+            if (knownNodes.get(i).equals(selfNode)) {
                 knownNodes.remove(i);
             }
         }
 
-        // TODO: Remove Duplicates manually
         Set<NodeEntry> mergedTable = new LinkedHashSet<>(knownNodes);
         knownNodes.clear();
         knownNodes.addAll(mergedTable);
@@ -217,6 +231,12 @@ public class Node{
                 }
             }
             System.out.println("** RequestTableThread [" + Thread.currentThread().getId() + "] merged Tables into " + formatTable(knownNodes) + "**");
+        }
+
+        // Remove random nodes, until just there are just three nodes left
+        Random random = new Random();
+        while(knownNodes.size() > 3){
+            knownNodes.remove(random.nextInt(knownNodes.size()));
         }
     }
 }
