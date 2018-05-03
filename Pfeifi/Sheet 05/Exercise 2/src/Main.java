@@ -1,24 +1,30 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class Main {
 
     public static void main(String[] args) {
 
         int amountOfAdresses = 16; // 2^4
-        int[] indicesOfNodes = {2, 4, 6, 10, 13};
+        ArrayList<Integer> indicesOfNodes = new ArrayList(Arrays.asList(new Integer[] {2,4,6,10,13}));
         Node[] globalTable = new Node[amountOfAdresses];
 
         System.out.println("** Chord Initialized **\n");
 
-        for (int i = 0; i < indicesOfNodes.length; i++) {
-            globalTable[indicesOfNodes[i]] = new Node(indicesOfNodes[i], globalTable);
+        for (int i = 0; i < indicesOfNodes.size(); i++) {
+            globalTable[indicesOfNodes.get(i)] = new Node(indicesOfNodes.get(i), globalTable, indicesOfNodes);
         }
 
-        for (int i = 0; i < indicesOfNodes.length; i++) {
-            globalTable[indicesOfNodes[i]].initFingerTable(indicesOfNodes);
+        for (int i = 0; i < indicesOfNodes.size(); i++) {
+            globalTable[indicesOfNodes.get(i)].initSuccessorAndPredecessor(indicesOfNodes);
         }
+        System.out.println();
+
+
 
         while (true) {
 
@@ -30,21 +36,53 @@ public class Main {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             if (input.equals("add") || input.equals("remove")) {
                 if (input.equals("add")) {
                     System.out.println("** Chord: " + formatChord(indicesOfNodes) +" **");
                     System.out.println("** Enter the value of the node you want to add **");
-                    int addInput = 0;
+                    int newIndex = 0;
                     try {
                         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                        addInput = Integer.parseInt(reader.readLine());
+                        newIndex = Integer.parseInt(reader.readLine());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    System.out.println("** Adding Node " + addInput +" to the Chord**\n");
-                    // TODO: Add a node to the network
+                    indicesOfNodes.add(newIndex);
+                    globalTable[newIndex] = new Node(newIndex, globalTable);
 
-                }else if (input.equals("remove")) {
+                    System.out.println("** Choose the predecessor**");
+                    int predecessorInput = 0;
+                    try {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                        predecessorInput = Integer.parseInt(reader.readLine());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    globalTable[newIndex].setPredecessor(predecessorInput);
+                    System.out.println("** Added new Node [" + newIndex +"] to the Chord**\n");
+                    System.out.println("** New Node [" + newIndex + "] is asking its Predecessor Node [" + globalTable[newIndex].getPredecessor() + "] for its Successor**");
+                    globalTable[newIndex].setSuccessor(globalTable[globalTable[newIndex].getPredecessor()].getSuccessor());
+                    System.out.println("** Node [" + predecessorInput +"] is updating its Successor to be the new Node[" + newIndex +"]**");
+                    System.out.println("** Old Successor of Node ["+ predecessorInput +"] is updating its predecessor as the added Node**");
+                    globalTable[globalTable[newIndex].getPredecessor()].setSuccessor(newIndex);
+                    globalTable[globalTable[newIndex].getSuccessor()].setPredecessor(newIndex);
+                    System.out.println("** New Node [" + newIndex +"] creates its Finger Table **\n");
+                    globalTable[newIndex].initFingerTable(indicesOfNodes);
+
+                    // Let Nodes update their Tables by comparing with Updated Table, that a node was added
+                    int start = indicesOfNodes.indexOf(newIndex);
+                    int c = start;
+                    while(true){
+                        c%= indicesOfNodes.size();
+                        globalTable[indicesOfNodes.get(c)].updateFingerTable(indicesOfNodes);
+                        if(c == start -1)
+                            break;
+                        c++;
+
+                    }
+
+                } else if (input.equals("remove")) {
                     System.out.println("** Chord: " + formatChord(indicesOfNodes) +" **");
                     System.out.println("** Enter the value of the node you want to remove **");
                     int removeInput = 0;
@@ -55,13 +93,20 @@ public class Main {
                         e.printStackTrace();
                     }
 
+
                     System.out.println("** Removing Node" + removeInput +" from the Chord**\n");
-                    // TODO: Remove a node from the network
+                    globalTable[removeInput] = null;
+                    indicesOfNodes.remove(removeInput);
+
+                    // TODO: Let Nodes update their Tables by comparing with Updated Table, that a node was removed
+
                 }
-                // Let Nodes update their Tables by comparing with Updated Table
-                for (int i = 0; i < indicesOfNodes.length; i++) {
-                    globalTable[indicesOfNodes[i]].updateGlobalTable(globalTable);
+                System.out.println();
+
+                for (int i = 0; i < indicesOfNodes.size(); i++) {
+                    System.out.println("**Printing Table of Node [" + indicesOfNodes.get(i) + "] **\n" + globalTable[indicesOfNodes.get(i)].printFingerTable());
                 }
+
                 System.out.println();
             } else {
                 if(input.equals("exit")) {
@@ -73,13 +118,16 @@ public class Main {
         }
     }
 
-    public static String formatChord(int[] indicesOfNodes){
+    public static String formatChord(ArrayList<Integer> indicesOfNodes){
+
+        //TODO: Sort Chord
+        Collections.sort(indicesOfNodes);
         String chord = "[";
-        for (int i = 0; i < indicesOfNodes.length; i++) {
-            if(!(i == indicesOfNodes.length-1))
-                chord += indicesOfNodes[i] + ", ";
+        for (int i = 0; i < indicesOfNodes.size(); i++) {
+            if(!(i == indicesOfNodes.size()-1))
+                chord += indicesOfNodes.get(i) + ", ";
             else
-                chord += indicesOfNodes[i];
+                chord += indicesOfNodes.get(i);
         }
         return chord + "]";
     }
