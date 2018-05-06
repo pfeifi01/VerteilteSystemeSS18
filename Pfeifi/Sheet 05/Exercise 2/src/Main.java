@@ -28,7 +28,7 @@ public class Main {
 
         while (true) {
 
-            System.out.println("** Enter 'add' or 'remove' to change the structure of the Chord. Enter 'exit' to quit **");
+            System.out.println("** Enter 'add' to add a node the Chord. Enter 'exit' to quit **");
             String input = "";
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -63,13 +63,13 @@ public class Main {
                     System.out.println("** Added new Node [" + newIndex +"] to the Chord**\n");
                     System.out.println("** New Node [" + newIndex + "] is asking its Predecessor Node [" + globalTable[newIndex].getPredecessor() + "] for its Successor**");
                     globalTable[newIndex].setSuccessor(globalTable[globalTable[newIndex].getPredecessor()].getSuccessor());
-                    System.out.println("** Node [" + predecessorInput +"] is updating its Successor to be the new Node[" + newIndex +"]**");
-                    System.out.println("** Old Successor of Node ["+ predecessorInput +"] is updating its predecessor as the added Node**");
+                    System.out.println("** Node [" + predecessorInput +"] is updating its Successor to be the new Node [" + newIndex + "]**");
+                    System.out.println("** Old Successor of Node ["+ predecessorInput +"] is updating its predecessor as the new Node [" + newIndex + "] **");
                     globalTable[globalTable[newIndex].getPredecessor()].setSuccessor(newIndex);
                     globalTable[globalTable[newIndex].getSuccessor()].setPredecessor(newIndex);
                     System.out.println("** New Node [" + newIndex +"] creates its Finger Table **\n");
                     globalTable[newIndex].initFingerTable(indicesOfNodes);
-
+                    Collections.sort(indicesOfNodes);
                     // Let Nodes update their Tables by comparing with Updated Table, that a node was added
                     int start = indicesOfNodes.indexOf(newIndex);
                     int c = start;
@@ -81,25 +81,6 @@ public class Main {
                         c++;
 
                     }
-
-                } else if (input.equals("remove")) {
-                    System.out.println("** Chord: " + formatChord(indicesOfNodes) +" **");
-                    System.out.println("** Enter the value of the node you want to remove **");
-                    int removeInput = 0;
-                    try {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                        removeInput = Integer.parseInt(reader.readLine());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-
-                    System.out.println("** Removing Node" + removeInput +" from the Chord**\n");
-                    globalTable[removeInput] = null;
-                    indicesOfNodes.remove(removeInput);
-
-                    // TODO: Let Nodes update their Tables by comparing with Updated Table, that a node was removed
-
                 }
                 System.out.println();
 
@@ -120,8 +101,6 @@ public class Main {
 
     public static String formatChord(ArrayList<Integer> indicesOfNodes){
 
-        //TODO: Sort Chord
-        Collections.sort(indicesOfNodes);
         String chord = "[";
         for (int i = 0; i < indicesOfNodes.size(); i++) {
             if(!(i == indicesOfNodes.size()-1))
