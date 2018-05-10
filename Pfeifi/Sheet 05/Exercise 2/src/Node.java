@@ -88,7 +88,7 @@ public class Node{
                 p = globalTable[p.getPredecessor()];
             }
         }
-        System.out.println("** Node [" + this.id + "]  updated its Finger Table **");
+        System.out.println("** Node [" + this.id + "] updated its Finger Table **");
     }
 
     public String printFingerTable(){
