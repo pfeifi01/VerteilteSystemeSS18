@@ -10,13 +10,9 @@ public class Application extends Thread{
 
     @Override
     public void run() {
-        while(true){
+        // The first node sends a message
+        if(node.getIndexOfPort() == 0) {
             sendMessage();
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -27,7 +23,9 @@ public class Application extends Thread{
     }
 
     public void receiveMessage(String message){
-        System.out.println("Node [" + (this.node.getIndexOfPort()+1) +"]: Application received message [" + message +"] from Middleware");
+        System.err.println("Node [" + (this.node.getIndexOfPort()+1) +"]: Application received message [" + message +"] from Middleware and starts sending a new message");
+        // Message received and is now forwarded to the next node
+        sendMessage();
     }
 
     private String generateMessage() {
