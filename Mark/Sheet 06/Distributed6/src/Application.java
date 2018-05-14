@@ -1,5 +1,4 @@
 import java.util.Random;
-import java.util.UUID;
 
 public class Application extends Thread{
 
@@ -10,13 +9,15 @@ public class Application extends Thread{
 	}
 	
 	public void getMessage(String str){
-		System.out.println("Received Message from Middleware: ");
-		System.out.println(str);
+		System.err.println("APPLICATION: Received Message from Middleware: " + str + "\n");
+		sendMessage();
 	}
 	
 	
 	public void sendMessage(){
 		String str = generateString();
+		System.out.println("APPLICATION: Sent Message to Middleware: " + str);
+
 		node.getMiddleware().getMessageFromApplicationAndSendMessageToAll(str);
 	}
 	
@@ -24,7 +25,7 @@ public class Application extends Thread{
     	String allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         StringBuilder str = new StringBuilder();
         Random rnd = new Random();
-        while (str.length() < 18) { // length of the random string.
+        while (str.length() < 10) {
             int index = (int) (rnd.nextFloat() * allChars.length());
             str.append(allChars.charAt(index));
         }
@@ -33,8 +34,11 @@ public class Application extends Thread{
     }
 
 	public void run(){
-		sendMessage();
-		while(true){}
+		if(this.node.getMiddleware().getPortIndex() == 0){
+			sendMessage();
+		}
+		while(true){
+		}
 	}
 	
 	
