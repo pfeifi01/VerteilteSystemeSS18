@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Middleware extends Thread{
@@ -13,9 +14,11 @@ public class Middleware extends Thread{
 	private Node node;
 	private int portIndex;
 	private int[] PORTS = {8080,9000,9090};
-	private int[][] delays = {{0,1,20},{1,0,3},{20,3,0}};
+	private int[][] delays = {{0,1,10},{1,0,3},{10,3,0}};
 	private int[] clockVector = {0,0,0};
 	private List<VectorClockProtocol> buffer = new ArrayList<>();
+	
+	
 	
 	ServerSocket server = null;
 	
@@ -56,9 +59,6 @@ public class Middleware extends Thread{
 		
 
 		
-		System.out.println("Middleware received Message from application: ");
-		System.out.println(str);
-		System.out.println("Middleware ready to send it");
 
 		
 		ArrayList<Integer> otherPortIndices = new ArrayList<>();
@@ -76,48 +76,28 @@ public class Middleware extends Thread{
 		
 		
 		try {
+			System.out.println("MIDDLEWARE: received Message from application: " + Arrays.toString(protocol.getVector()) + " " + str);
 			Socket socket1 = new Socket("localhost", PORTS[otherPortIndices.get(0)]);
 			Socket socket2 = new Socket("localhost", PORTS[otherPortIndices.get(1)]);
 			
-			int delay1 = this.delays[this.portIndex][otherPortIndices.get(0)];
-			int delay2 = this.delays[this.portIndex][otherPortIndices.get(1)];
-			
+
+
 			ObjectOutputStream out1 = new ObjectOutputStream(socket1.getOutputStream());
-			
-			//Wait delay time to send message
-			try {
-				Thread.sleep(delay1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			
 			out1.writeObject(protocol);
 			out1.flush();
 			socket1.close();
-			
-			ObjectOutputStream out2 = new ObjectOutputStream(socket2.getOutputStream());
-			
-			try {
-				Thread.sleep(delay2);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			
-			out2.writeObject(protocol);
-			out2.flush();
 
 			
+			ObjectOutputStream out2 = new ObjectOutputStream(socket2.getOutputStream());
+			out2.writeObject(protocol);
+			out2.flush();
 			socket2.close();
+
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		
-		//sendToAllOthers();
-		//OutputStream
-		
 	}
 	
 	
@@ -128,29 +108,47 @@ public class Middleware extends Thread{
 		node.getApplication().getMessage(str);
 	}
 	
-	public  void getMessageFromOtherAndSendToApplication(){
+	public void getMessageFromOtherAndSendToApplication(){
 		
 		VectorClockProtocol protocol = getMessageFromOtherNode();
 		
-		if(checkVectorClock(protocol.getPortIndex(),protocol.getVector())){
-			this.clockVector[protocol.getPortIndex()]++;
-			sendMessageToApplication(protocol.getMessage());
-			
-			//Loop through buffer, maybe another one got ready
-			for(int i = 0; i < buffer.size(); i++){
-				if(checkVectorClock(buffer.get(i).getPortIndex(),buffer.get(i).getVector())){
-					this.clockVector[protocol.getPortIndex()]++;
-					sendMessageToApplication(protocol.getMessage());
-					i=0;
+		
+		Thread t = new Thread(new Runnable(){
+			public void run(){
+				try {
+					Thread.sleep(delays[protocol.getPortIndex()][portIndex] * 1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
+				System.out.println("Me: " + Arrays.toString(clockVector) + ". Other " + protocol.getPortIndex() + ": " + Arrays.toString(protocol.getVector()));
+				System.out.println("MIDDLEWARE: received protocol from " + protocol.getPortIndex() + ": " + Arrays.toString(protocol.getVector()) + " " + protocol.getMessage());
+
+				if(checkVectorClock(protocol.getPortIndex(),protocol.getVector())){
+					clockVector[protocol.getPortIndex()]++;
+					sendMessageToApplication(protocol.getMessage());
+					
+					//Loop through buffer, maybe another one got ready
+					for(int i = 0; i < buffer.size(); i++){
+						if(checkVectorClock(buffer.get(i).getPortIndex(),buffer.get(i).getVector())){
+							clockVector[protocol.getPortIndex()]++;
+							sendMessageToApplication(protocol.getMessage());
+							i=0;
+						}
+					}
+				}else{
+					//Add protocol to List, because its not ready to be executed
+					buffer.add(protocol);
+				}
+				
 			}
-		}else{
-			//Add protocol to List, because its not ready to be executed
-			buffer.add(protocol);
-		}
+		});
+		t.start();
+		
 	}
 	
 	public boolean checkVectorClock(int otherIndex, int[] otherVector){
+		
+		
 		
 		//Check right message
 		if(otherVector[otherIndex] != (this.clockVector[otherIndex]+1)){
@@ -160,9 +158,9 @@ public class Middleware extends Thread{
 		//Check right time
 		for(int i = 0; i < clockVector.length; i++){
 			if(i == otherIndex){
-				i++;
+				continue;
 			}
-			if(otherVector[i] != this.clockVector[i]){
+			if(otherVector[i] > this.clockVector[i]){
 				return false;
 			}
 		}
@@ -172,10 +170,13 @@ public class Middleware extends Thread{
 	
 	public void run(){
 
-		System.out.println("Middleware sends message to its application");
-		sendMessageToApplication("middle");
 		while(true){
+			getMessageFromOtherAndSendToApplication();
 		}
 		
+	}
+	
+	public int getPortIndex(){
+		return this.portIndex;
 	}
 }

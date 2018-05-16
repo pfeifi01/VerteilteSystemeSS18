@@ -1,6 +1,10 @@
+import java.io.Serializable;
 
-public class VectorClockProtocol {
+public class VectorClockProtocol implements Serializable{
 
+
+	private static final long serialVersionUID = 1L;
+	
 	private int portIndex;
 	private int[] vector;
 	private String message;
