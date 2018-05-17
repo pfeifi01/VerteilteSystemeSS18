@@ -14,41 +14,6 @@ public class Main {
         int numberOfClientsDataCenterC = 10;
         int numberOfClientsDataCenterD = 4;
 
-        // Create Data Centers
-        DataCenter a = new DataCenter("Data Center A",numberOfClientsDataCenterA);
-        DataCenter b = new DataCenter("Data Center B",numberOfClientsDataCenterB);
-        DataCenter c = new DataCenter("Data Center C",numberOfClientsDataCenterC);
-        DataCenter d = new DataCenter("Data Center D",numberOfClientsDataCenterD);
-
-        System.out.println();
-
-        // Latency between Data Centers computed from the Digits of the Matriculation Number
-        String matriculationNumber = "1416200";
-        int LatencyBetweenA_B = Integer.parseInt(matriculationNumber.substring(0, 1));
-        int LatencyBetweenA_C = Integer.parseInt(matriculationNumber.substring(1, 2));
-        int LatencyBetweenA_D = Integer.parseInt(matriculationNumber.substring(2, 3));
-        int LatencyBetweenB_C = Integer.parseInt(matriculationNumber.substring(3, 4));
-        int LatencyBetweenB_D = Integer.parseInt(matriculationNumber.substring(4, 5));
-        int LatencyBetweenC_D = Integer.parseInt(matriculationNumber.substring(5, 6));
-
-        // Connections between Data Centers containing the Instance of the Data Center and the Latency of the Connection
-        HashMap<DataCenter, Integer> connectionsOfDataCenterA = new HashMap<>();
-        connectionsOfDataCenterA.put(b, LatencyBetweenA_B);
-        connectionsOfDataCenterA.put(c, LatencyBetweenA_C);
-        connectionsOfDataCenterA.put(d,LatencyBetweenA_D);
-        HashMap<DataCenter, Integer> connectionsOfDataCenterB = new HashMap<>();
-        connectionsOfDataCenterB.put(a, LatencyBetweenA_B);
-        connectionsOfDataCenterB.put(c, LatencyBetweenB_C);
-        connectionsOfDataCenterB.put(d, LatencyBetweenB_D);
-        HashMap<DataCenter, Integer> connectionsOfDataCenterC = new HashMap<>();
-        connectionsOfDataCenterC.put(a, LatencyBetweenA_C);
-        connectionsOfDataCenterC.put(b,LatencyBetweenB_C);
-        connectionsOfDataCenterC.put(d, LatencyBetweenC_D);
-        HashMap<DataCenter, Integer> connectionsOfDataCenterD = new HashMap<>();
-        connectionsOfDataCenterD.put(a, LatencyBetweenA_D);
-        connectionsOfDataCenterD.put(b, LatencyBetweenB_D);
-        connectionsOfDataCenterD.put(c, LatencyBetweenC_D);
-
         // Maximum Number Of Requests executed by a Data Center
         int maximumAmountOfRequests = 16;
 
@@ -59,13 +24,18 @@ public class Main {
         int amountOfRequestsDataCenterC = random.nextInt(maximumAmountOfRequests);
         int amountOfRequestsDataCenterD = random.nextInt(maximumAmountOfRequests);
 
-        // Initialize Data Centers
-        a.initDataCenter(connectionsOfDataCenterA,amountOfRequestsDataCenterA);
-        b.initDataCenter(connectionsOfDataCenterB,amountOfRequestsDataCenterB);
-        c.initDataCenter(connectionsOfDataCenterC,amountOfRequestsDataCenterC);
-        d.initDataCenter(connectionsOfDataCenterD,amountOfRequestsDataCenterD);
-
+        // Create Data Centers
+        DataCenter a = new DataCenter("A",numberOfClientsDataCenterA, amountOfRequestsDataCenterA);
+        DataCenter b = new DataCenter("B",numberOfClientsDataCenterB, amountOfRequestsDataCenterB);
+        DataCenter c = new DataCenter("C",numberOfClientsDataCenterC, amountOfRequestsDataCenterC);
+        DataCenter d = new DataCenter("D",numberOfClientsDataCenterD, amountOfRequestsDataCenterD);
         System.out.println();
+
+        // Store Latencies between Data Centers, where the indices are the following 0 = A, 1 = B, 2 = C, 3 = D
+        int[][] latenciesToDataCenters = {{0,1,4,1},{1,0,6,2},{4,6,0,10},{1,2,10,0}}; // Latency between Data Centers computed from the Digits of the Matriculation Number [1416200]
+
+        // Use the Distance Vector Algorithm to find fastest path between two Pairs of Data Centers by minimizing the connection latency matrix
+        latenciesToDataCenters = sortConnectionsByLatency(latenciesToDataCenters);
 
         // Store Data Centers in a List
         ArrayList<DataCenter> listOfDataCenters = new ArrayList<>();
@@ -76,26 +46,26 @@ public class Main {
         listOfDataCenters.add(c);
         listOfDataCenters.add(d);
 
+
+        for(DataCenter center : listOfDataCenters) {
+            center.initDataCenterConnections(listOfDataCenters, latenciesToDataCenters);
+        }
+
         // Initialize Weight Parameters (w1, w2)
         Pair<Double,Double> preferStorageCost = new Pair<>(0.75,0.25);
         Pair<Double,Double> preferLatencyCost = new Pair<>(0.25,0.75);
         Pair<Double,Double> preferEquallyStorageAndLatencyCost = new Pair<>(0.5,0.5);
 
-        //Add Clients to Data Centers TODO: understand what is happening here
+        // Send requests to Data Centers
         for(DataCenter center : listOfDataCenters) {
-            if(!center.canHandleHisRequests()) {
-                int unhandled = center.getAmountOfUnhandledRequests();
-                for(int i = 0; i < unhandled; i++) {
-                    DataCenter data = center.findOptimalDataCenter();
-                    data.addClientToDataCenter();
-                }
-            }
+           center.sendRequestsToDataCenter();
         }
 
-        //TODO: understand why we are doing this
+        // First we add the number of clients times the latency to the Data Center which is 1
         int latencyCosts = numberOfClientsDataCenterA + numberOfClientsDataCenterB +numberOfClientsDataCenterC +numberOfClientsDataCenterD;
         int storageCosts = 0;
 
+        // Then we sum the latency and storage costs of each Data Center up, considering that each replica costs 30
         for(DataCenter center : listOfDataCenters) {
             latencyCosts += center.getAmountOfLatency();
             storageCosts += center.getAmountOfReplicas() * 30;
@@ -108,10 +78,25 @@ public class Main {
         System.out.println("** Prefer Latency Cost " +calculateTotalCost(storageCosts, latencyCosts, preferLatencyCost));
         System.out.println("** Prefer Equally Storage Cost and Latency Cost " + calculateTotalCost(storageCosts, latencyCosts, preferEquallyStorageAndLatencyCost));
 
-
     }
-    // Calculate the total cost TODO: understand what is happening here
+
+    // Calculate the total cost
     public static double calculateTotalCost(double storageCost, double latencyCost, Pair<Double, Double> weights) {
         return storageCost * weights.getKey() + latencyCost * weights.getValue();
     }
+
+    // Minimize the latency of the connections between Data Centers
+    public static int[][] sortConnectionsByLatency(int[][] latenciesToDataCenters){
+
+        // Distance Vector Algorithm by Warshall
+        for(int k = 0; k < latenciesToDataCenters.length; k++){
+            for(int i = 0; i < latenciesToDataCenters.length; i++){
+                for(int j = 0; j < latenciesToDataCenters.length; j++){
+                    //TODO: Continue Implementing
+                }
+            }
+        }
+        return new int[][]{};
+    }
 }
+
