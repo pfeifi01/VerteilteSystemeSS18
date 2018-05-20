@@ -1,7 +1,5 @@
 import javafx.util.Pair;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
 
 public class Main {
@@ -46,7 +44,6 @@ public class Main {
         listOfDataCenters.add(c);
         listOfDataCenters.add(d);
 
-
         for(DataCenter center : listOfDataCenters) {
             center.initDataCenterConnections(listOfDataCenters, latenciesToDataCenters);
         }
@@ -89,14 +86,14 @@ public class Main {
     public static int[][] sortConnectionsByLatency(int[][] latenciesToDataCenters){
 
         // Distance Vector Algorithm by Warshall
-        for(int k = 0; k < latenciesToDataCenters.length; k++){
-            for(int i = 0; i < latenciesToDataCenters.length; i++){
-                for(int j = 0; j < latenciesToDataCenters.length; j++){
-                    //TODO: Continue Implementing
+        for(int k = 0; k < 4; k++){
+            for(int i = 0; i < 4; i++){
+                for(int j = 0; j < 4; j++){
+                    latenciesToDataCenters[i][j] = Math.min(latenciesToDataCenters[i][j],latenciesToDataCenters[i][k] + latenciesToDataCenters[k][j]);
                 }
             }
         }
-        return new int[][]{};
+        return latenciesToDataCenters;
     }
 }
 
