@@ -5,6 +5,8 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Client {
 
     public static void main(String args[]) {

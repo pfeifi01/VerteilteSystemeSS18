@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Main {
 
     public static void main(String[] args) {

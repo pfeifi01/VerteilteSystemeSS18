@@ -1,7 +1,10 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Server {
+    
 
     public static void main(String[] args) {
 

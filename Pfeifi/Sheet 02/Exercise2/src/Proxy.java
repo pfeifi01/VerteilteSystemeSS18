@@ -3,6 +3,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Proxy {
 
     public static void main(String[] args) {

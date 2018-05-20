@@ -3,6 +3,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Server implements Services {
 
     public int serverPort;

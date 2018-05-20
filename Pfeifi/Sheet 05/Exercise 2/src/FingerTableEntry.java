@@ -1,5 +1,7 @@
 import javafx.util.Pair;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class FingerTableEntry {
 
     private int start;

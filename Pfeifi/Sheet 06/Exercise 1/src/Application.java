@@ -1,5 +1,7 @@
 import java.util.Random;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Application extends Thread{
 
     private Node node;

@@ -7,6 +7,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class ServerThread implements Runnable{
 
     private Socket client = null;

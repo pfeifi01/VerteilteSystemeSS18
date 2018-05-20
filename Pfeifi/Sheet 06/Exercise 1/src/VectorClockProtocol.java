@@ -1,6 +1,8 @@
 import java.io.Serializable;
 
-public class VectorClockProtocol implements Serializable {
+p/** Author: Martin Pfeifhofer © SS 2018 **/
+
+ublic class VectorClockProtocol implements Serializable {
 
     private int[] clockVector;
     private String message;

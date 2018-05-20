@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class NetworkHandler {
 
     public ArrayList<NodeEntry> nodeNetwork = new ArrayList<>();

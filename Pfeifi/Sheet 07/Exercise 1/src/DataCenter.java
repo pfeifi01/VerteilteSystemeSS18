@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class DataCenter {
 
     ArrayList<DataCenter> connectionsToDataCenters;
@@ -16,7 +18,7 @@ public class DataCenter {
         this.name = name;
         this.amountOfClients = amountOfClients;
         this.amountOfRequests = amountOfRequests;
-        System.out.println("** Data Center ["+ name + "] has been created with an amount of clients of [" + amountOfClients + "] and an amount of request of [" + amountOfRequests + "] **");
+        System.out.println("** Data Center ["+ name + "] has been created with an amount of Clients of {" + amountOfClients + "} and an amount of Request of {" + amountOfRequests + "} **");
     }
 
     // Initialize Data Center with connections and latencies to the other Data Centers
@@ -30,18 +32,18 @@ public class DataCenter {
     public void sendRequestsToDataCenter(){
         if(!this.canHandleHisRequests()) {
             int unhandled = this.getAmountOfUnhandledRequests();
-            System.out.println("** Data Center [" + name +"] has " + this.getAmountOfUnhandledRequests() + " unhandled requests **");
+            System.out.println("** --> Data Center [" + name +"] has {" + this.getAmountOfUnhandledRequests() + "} unhandled Requests **");
             for(int i = 0; i < unhandled; i++) {
                 this.findOptimalDataCenter();
             }
-            System.out.println("\n");
+            System.out.println();
         }
     }
 
     public int findConnectionWithLowestLatency(ArrayList<Integer> ignoreIndices){
 
         int index = 0;
-        for (int i=1; i<latenciesToDataCenters[id].length; i++){
+        for (int i=0; i < latenciesToDataCenters[id].length; i++){
             if(ignoreIndices.contains(i)){
                 continue;
             }
@@ -63,11 +65,11 @@ public class DataCenter {
     }
 
     // Find best Data Center Connection considering Latency, cost of replicas and how many requests it can handle
-    public DataCenter findOptimalDataCenter(){
-        DataCenter optimalDataCenter = null;
+    public void findOptimalDataCenter(){
+        DataCenter optimalDataCenter;
         ArrayList<Integer> ignoreIndices = new ArrayList<>();
         ignoreIndices.add(id);
-        int indexOfLowestLatencyDataCenter;
+        int indexOfLowestLatencyDataCenter = 0;
         for(int i=0; i < latenciesToDataCenters[id].length;i++){
             // Choose Data Center with lowest Latency
             indexOfLowestLatencyDataCenter = findConnectionWithLowestLatency(ignoreIndices);
@@ -79,14 +81,13 @@ public class DataCenter {
                 amountOfLatency += latenciesToDataCenters[id][indexOfLowestLatencyDataCenter];
                 optimalDataCenter.amountOfRequests++;
                 this.amountOfRequests--;
-                System.out.println("** Optimal Data Center [" + name + "] can handle another request and received a new Replica **");
-                return optimalDataCenter;
+                System.out.println("** Optimal Data Center [" + optimalDataCenter.name + "] can handle another request and received a new Replica **");
+                return;
             }
         }
-        // If Data Center can't handle any more requests
-        System.out.println("** Data Center [" + name + "]: Other Data Centers can't handle anymore Requests, so replica is added to itself **");
+        // If other Data Centers can't handle any more requests
+        System.out.println("** Data Center [" + name + "]: Other Data Centers can't handle anymore Requests, so it adds a Replica to itself **");
         this.amountOfReplicas ++;
-        return optimalDataCenter;
     }
 
     // Request Handling Functions

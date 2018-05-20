@@ -3,6 +3,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Node{
 
     // Table of Nodes [Name,IP,Port] with max of 3 Nodes

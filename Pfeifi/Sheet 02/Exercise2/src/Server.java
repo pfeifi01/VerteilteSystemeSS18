@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Scanner;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Server {
 
     public static void main(String[] args) {

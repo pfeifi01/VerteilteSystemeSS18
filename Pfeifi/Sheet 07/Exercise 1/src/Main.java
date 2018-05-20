@@ -2,9 +2,12 @@ import javafx.util.Pair;
 import java.util.ArrayList;
 import java.util.Random;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Main {
 
     public static void main(String[] args) {
+        System.out.println();
 
         // Number of Clients that a Data Center can handle
         int numberOfClientsDataCenterA = 10;
@@ -69,7 +72,7 @@ public class Main {
         }
 
         // Print Results
-        System.out.println();
+
         System.out.println("** Results: ");
         System.out.println("** Prefer Storage Cost " + calculateTotalCost(storageCosts, latencyCosts, preferStorageCost));
         System.out.println("** Prefer Latency Cost " +calculateTotalCost(storageCosts, latencyCosts, preferLatencyCost));

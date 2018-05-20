@@ -1,5 +1,7 @@
 import java.io.Serializable;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class NodeEntry implements Serializable {
 
     public String name;

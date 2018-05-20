@@ -2,6 +2,8 @@ import javafx.util.Pair;
 
 import java.util.ArrayList;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Node{
 
     private int id;

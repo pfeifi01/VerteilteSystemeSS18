@@ -2,6 +2,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Node {
 
     private Application application;
