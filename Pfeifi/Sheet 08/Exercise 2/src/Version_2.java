@@ -1,5 +1,7 @@
 import java.util.Random;
 
+/** Author: Martin Pfeifhofer © SS 2018 **/
+
 public class Version_2 {
 
     public static double upTimePercentageOFSystem = 0.975;
